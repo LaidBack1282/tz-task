@@ -1,0 +1,65 @@
+namespace:
+  name: nginx-app
+
+deployment:
+  name: agsr-task-nginx-app
+  app: agsr-task-nginx-app
+  replicas: 3
+  strategy:
+    maxSurge: 3
+    maxUnavailable: 0
+  selector:
+    app: nginx-app
+  template:
+    name: nginx-app
+    labels:
+      app: nginx-app
+  spec:
+    containers:
+      name: nginx-app
+      image: ddovguchev1282/custom_nginx:1.5
+      env:
+        valueFrom:
+          configMapKeyRef:
+            name: message-context
+            key: message
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          port: 80
+          path: /message
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+        initialDelaySeconds: 10
+      startupProbe:
+        httpGet:
+          port: 80
+          path: /message
+        failureThreshold: 30
+        timeoutSeconds: 10
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "250m"
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+    restartPolicy: Always
+
+configmap:
+  name: message-context
+  data:
+    message: "message))))"
+
+service:
+  name: agsr-task-nginx-app-service
+  labels:
+    app: agsr-task-nginx-app
+  type: NodePort
+  selector:
+    app: nginx-app
+  ports:
+    port: 80
+    targetPort: 80
+    nodePort: 30007

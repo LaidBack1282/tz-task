@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: {{ .Values.deployment.app }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  strategy:
+    rollingUpdate:
+      maxSurge: {{ .Values.deployment.strategy.maxSurge }}
+      maxUnavailable: {{ .Values.deployment.strategy.maxUnavailable }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.selector.app }}
+  template:
+    metadata:
+      name: {{ .Values.deployment.template.name }}
+      labels:
+        app: {{ .Values.deployment.template.labels.app }}
+      annotations:
+        checksum/configmap: {{ include "my-nginx-app.configmap-checksum" . }}
+    spec:
+      containers:
+        - name: {{ .Values.deployment.spec.containers.name }}
+          image: {{ .Values.deployment.spec.containers.image }}
+          env:
+            - name: MESSAGE_CONTEXT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.deployment.spec.containers.env.valueFrom.configMapKeyRef.name }}
+                  key: {{ .Values.deployment.spec.containers.env.valueFrom.configMapKeyRef.key }}
+          livenessProbe:
+            failureThreshold: {{ .Values.deployment.spec.containers.livenessProbe.failureThreshold }}
+            httpGet:
+              port: {{ .Values.deployment.spec.containers.livenessProbe.httpGet.port }}
+              path: {{ .Values.deployment.spec.containers.livenessProbe.httpGet.path }}
+            periodSeconds: {{ .Values.deployment.spec.containers.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.deployment.spec.containers.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.deployment.spec.containers.livenessProbe.timeoutSeconds }}
+            initialDelaySeconds: {{ .Values.deployment.spec.containers.livenessProbe.initialDelaySeconds }}
+          startupProbe:
+            httpGet:
+              port: {{ .Values.deployment.spec.containers.startupProbe.httpGet.port }}
+              path: {{ .Values.deployment.spec.containers.startupProbe.httpGet.path }}
+            failureThreshold: {{ .Values.deployment.spec.containers.startupProbe.failureThreshold }}
+            timeoutSeconds: {{ .Values.deployment.spec.containers.startupProbe.timeoutSeconds }}
+          resources:
+            requests:
+              memory: "{{ .Values.deployment.spec.containers.resources.requests.memory }}"
+              cpu: "{{ .Values.deployment.spec.containers.resources.requests.cpu }}"
+            limits:
+              memory: "{{ .Values.deployment.spec.containers.resources.limits.memory }}"
+              cpu: "{{ .Values.deployment.spec.containers.resources.limits.cpu }}"
+      restartPolicy: {{ .Values.deployment.spec.restartPolicy }}

@@ -1,0 +1,11 @@
+{{- define "my-nginx-app.configmap" -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name }}
+  namespace: {{ .Values.namespace.name }}
+data:
+  message: {{ .Values.configmap.data.message | quote }}
+{{- end -}}
+
+{{ include "my-nginx-app.configmap" . }}
